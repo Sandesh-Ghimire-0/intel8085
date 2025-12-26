@@ -1,0 +1,4 @@
+#git rm --cached filename  -> Remove from git but keep locally
+
+temp.cpp
+tp
