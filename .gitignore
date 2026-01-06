@@ -1,4 +1,10 @@
 #git rm --cached filename  -> Remove from git but keep locally
 
 temp.cpp
+temp
 tp
+cpu_pseudo.cpp
+*.txt
+*.pdf
+researches
+testa
