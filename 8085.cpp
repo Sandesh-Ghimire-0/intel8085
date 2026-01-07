@@ -16,7 +16,7 @@ void updateFlagsINR(State8085* state, uint8_t result) {
 void Emulate8085(State8085* state) {
     // 1. Fetch: Get the opcode at the current Program Counter
     unsigned char *opcode = &state->memory[state->pc];
-    
+    uint8_t mask;
     // 2. Decode & Execute
     switch (*opcode) {
         case 0x00: // NOP (No Operation)
@@ -209,6 +209,118 @@ void Emulate8085(State8085* state) {
             break;
         }
         //MVI finished
+        //Rotate started
+        case 0x07: { // RLC (Rotate Left Circular)
+            uint8_t bit7 = (state->a & 0x80) >> 7;
+            state->a = (state->a << 1) | bit7;
+            state->cc.cy = bit7;
+            break; // <--- DON'T FORGET
+        }
+
+        case 0x0F: { // RRC (Rotate Right Circular)
+            uint8_t bit0 = (state->a & 0x01);
+            state->a = (state->a >> 1) | (bit0 << 7);
+            state->cc.cy = bit0;
+            break;
+        }
+
+        case 0x17: { // RAL (Rotate Left through Carry)
+            uint8_t old_cy = state->cc.cy;
+            state->cc.cy = (state->a & 0x80) >> 7;
+            state->a = (state->a << 1) | (old_cy & 0x01); // Use old carry
+            break;
+        }
+
+        case 0x1F: { // RAR (Rotate Right through Carry)
+            uint8_t old_cy = state->cc.cy;
+            state->cc.cy = (state->a & 0x01);
+            state->a = (state->a >> 1) | ((old_cy & 0x01) << 7); // Use old carry
+            break;
+        }
+        //Rotate finished
+        //DAD started
+        // case 0x09:{
+        //     uint8_t higher_nibble = state->h + state->b;
+        //     uint8_t lower_nibble = state->l + state->c;
+        //     if (lower_nibble < state->l || lower_nibble < state->c){
+        //         ++higher_nibble;
+        //         if (lower_nibble < state->h || lower_nibble < state->b){
+        //             state->cc.cy = 1;
+        //         }
+        //     }
+
+        // }
+        case 0x09: { // DAD B (HL = HL + BC)
+            // 1. Combine pairs into 16-bit values
+            uint32_t hl = (state->h << 8) | state->l;
+            uint32_t bc = (state->b << 8) | state->c;
+
+            // 2. Perform the 32-bit addition to catch the 16-bit carry
+            uint32_t res = hl + bc;
+
+            // 3. Store the result back into H and L
+            state->h = (res & 0xFF00) >> 8;
+            state->l = (res & 0x00FF);
+
+            state->cc.cy = (res > 0xFFFF);
+             break;
+        }
+        case 0x19: { // DAD D (HL = HL + DE)
+            // 1. Combine pairs into 16-bit values
+            uint32_t hl = (state->h << 8) | state->l;
+            uint32_t de = (state->d << 8) | state->e;
+
+            // 2. Perform the 32-bit addition to catch the 16-bit carry
+            uint32_t res = hl + de;
+
+            // 3. Store the result back into H and L
+            state->h = (res & 0xFF00) >> 8;
+            state->l = (res & 0x00FF);
+
+            state->cc.cy = (res > 0xFFFF);
+             break;
+        }
+        case 0x29: { // DAD H (HL = HL + HL)
+            // 1. Combine pairs into 16-bit values
+            uint32_t hl = (state->h << 8) | state->l;
+
+            // 2. Perform the 32-bit addition to catch the 16-bit carry
+            uint32_t res = 2 * hl;
+
+            // 3. Store the result back into H and L
+            state->h = (res & 0xFF00) >> 8;
+            state->l = (res & 0x00FF);
+
+            state->cc.cy = (res > 0xFFFF);
+             break;
+        }
+        case 0x39: { // DAD SP (HL = HL + SP)
+            // 1. Combine pairs into 16-bit values
+            uint32_t hl = (state->h << 8) | state->l;
+            // 2. Perform the 32-bit addition to catch the 16-bit carry
+            uint32_t res = hl + state->sp;
+            // 3. Store the result back into H and L
+            state->h = (res & 0xFF00) >> 8;
+            state->l = (res & 0x00FF);
+
+            state->cc.cy = (res > 0xFFFF);
+             break;
+        }
+
+        //DAD finished
+        //LDAX started
+        case 0x0a:{ //load accumulator from bc pair
+            uint16_t addr = state->memory[state->b << 8 | state->c];
+            state->a = state->memory[addr];
+            break;
+        }
+
+        case 0x1a:{  // for de pair
+            uint16_t addr = state->memory[state->d << 8 | state->e];
+            state->a = state->memory[addr];
+            break;
+        }
+        //LDAX finished
         case 0x80: // ADD B (Add register B to A)
         {
             uint16_t res = (uint16_t)state->a + (uint16_t)state->b;
@@ -226,7 +338,11 @@ void Emulate8085(State8085* state) {
     }
 
     // Move to next instruction
+    std::cout << std::endl;
+    std::cout << "PC prev -> " << state->pc <<std::endl;
     state->pc += 1;  
+    std::cout << "PC INCREMENTED -> " << state->pc <<std::endl;
+    exit(1);
 }
 
 int main() {
@@ -234,13 +350,12 @@ int main() {
     state.memory = new uint8_t[0x10000]; // 64KB RAM
     state.pc = 0; // Standard start point
     state.sp = 0xFFFF;
-    state.memory[0] = 8;
-    std::cout << state.memory[0] << "...." << std::endl;  // error
-    std::cout << static_cast<int>(state.memory[0]) << "...." << std::endl; // the result i wanted.
+    state.memory[0] = 0x0f;
+    state.a = 0b10100011;
 
-    // while (true) {
-    //     Emulate8085(&state);
-    // }
+    while (true) {
+        Emulate8085(&state);
+     }
 
     return 0;
 }

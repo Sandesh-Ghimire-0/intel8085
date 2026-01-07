@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <bitset>
 
 
 struct ConditionCodes {
