@@ -89,7 +89,7 @@ void Emulate8085(State8085* state) {
             updateFlagsINR(state, state->b);
             break;
         }
-        case 0x0c: { // INR c
+        case 0x0C: { // INR c
             state->c++;
             updateFlagsINR(state, state->c);
             break;
@@ -99,7 +99,7 @@ void Emulate8085(State8085* state) {
             updateFlagsINR(state, state->d);
             break;
         }
-        case 0x1c: { // INR e
+        case 0x1C: { // INR e
             state->e++;
             updateFlagsINR(state, state->e);
             break;
@@ -109,7 +109,7 @@ void Emulate8085(State8085* state) {
             updateFlagsINR(state, state->h);
             break;
         }
-        case 0x2c: { // INR l
+        case 0x2C: { // INR l
             state->l++;
             updateFlagsINR(state, state->l);
             break;
@@ -119,7 +119,7 @@ void Emulate8085(State8085* state) {
             updateFlagsINR(state, result);
             break;
         }
-        case 0x3c: { // INR a
+        case 0x3C: { // INR a
             state->a++;
             updateFlagsINR(state, state->a);
             break;
@@ -131,7 +131,7 @@ void Emulate8085(State8085* state) {
             updateFlagsDCR(state, state->b);
             break;
         }
-        case 0x0d:{  // DCR c
+        case 0x0D:{  // DCR c
             state->c--;
             updateFlagsDCR(state, state->c);
             break;
@@ -141,7 +141,7 @@ void Emulate8085(State8085* state) {
             updateFlagsDCR(state, state->d);
             break;
         }
-        case 0x1d:{  // DCR e
+        case 0x1D:{  // DCR e
             state->e--;
             updateFlagsDCR(state, state->e);
             break;
@@ -151,7 +151,7 @@ void Emulate8085(State8085* state) {
             updateFlagsDCR(state, state->h);
             break;
         }
-        case 0x2d: { // DCR l
+        case 0x2D: { // DCR l
             state->l--;
             updateFlagsDCR(state, state->l);
             break;
@@ -161,7 +161,7 @@ void Emulate8085(State8085* state) {
            updateFlagsDCR(state, result);
             break;
         }
-        case 0x3d: { // DCR a
+        case 0x3D: { // DCR a
             state->a--;
             updateFlagsDCR(state, state->b);
             break;
@@ -173,7 +173,7 @@ void Emulate8085(State8085* state) {
             state->pc++;
             break;
         }
-        case 0x0e: {// MVI c, byte 
+        case 0x0E: {// MVI c, byte 
             state->c = opcode[1]; //           
             state->pc++;
             break;
@@ -183,7 +183,7 @@ void Emulate8085(State8085* state) {
             state->pc++;
             break;
         }
-        case 0x1e: {// MVI e, byte  
+        case 0x1E: {// MVI e, byte  
             state->e = opcode[1]; //           
             state->pc++;
             break;
@@ -193,7 +193,7 @@ void Emulate8085(State8085* state) {
             state->pc++;
             break;
         }
-        case 0x2e: {// MVI l, byte  
+        case 0x2E: {// MVI l, byte  
             state->l = opcode[1]; //           
             state->pc++;
             break;
@@ -203,7 +203,7 @@ void Emulate8085(State8085* state) {
             state->pc++;
             break;
         }
-        case 0x3e: {// MVI a, byte  
+        case 0x3E: {// MVI a, byte  
             state->a = opcode[1]; //           
             state->pc++;
             break;
@@ -309,18 +309,90 @@ void Emulate8085(State8085* state) {
 
         //DAD finished
         //LDAX started
-        case 0x0a:{ //load accumulator from bc pair
+        case 0x0A:{ //load accumulator from bc pair
             uint16_t addr = state->memory[state->b << 8 | state->c];
             state->a = state->memory[addr];
             break;
         }
 
-        case 0x1a:{  // for de pair
+        case 0x1A:{  // for de pair
             uint16_t addr = state->memory[state->d << 8 | state->e];
             state->a = state->memory[addr];
             break;
         }
         //LDAX finished
+        //DCX started
+        case 0x0B:{ // BC
+            uint16_t bc = state->b << 8 | state->c;
+            bc-=1;
+            state->b = bc >> 8 & 0xFF;
+            state->c = bc & 0xFF;
+            break;
+        }
+        case 0x1B:{ // DE
+            uint16_t de = state->d << 8 | state->e;
+            de-=1;
+            state->d = de >> 8 & 0xFF;
+            state->e = de & 0xFF;
+            break;
+        }
+        case 0x2B:{ // HL
+            uint16_t hl = state->h << 8 | state->l;
+            hl-=1;
+            state->h = hl >> 8 & 0xFF;
+            state->l = hl & 0xFF;
+            break;
+        }
+        case 0x3B:{ // SP
+            state->sp--;
+        }
+        //STA started
+        case 0X32:{
+            uint16_t memory_addr = opcode[2] << 8 | opcode[1];
+            state->memory[memory_addr] = state->a; 
+            state->pc+=2;
+            break;
+        }
+        //STA finished
+        //LDA started
+        case 0x3A:{
+            state->a = state->memory[opcode[2] << 8 | opcode[1]];
+            state->pc+=2;
+            break;
+        }
+        //LDA finished
+        //SHLD started
+        case 0x22:{
+            uint16_t memory_addr = opcode[2] << 8 | opcode[1];
+            state->memory[memory_addr] = state->l;
+            state->memory[memory_addr+1] = state->h;
+            state->pc += 2;
+            break;
+        }
+        //SHLD finished
+        case 0x2A:{ // LHLD
+            uint16_t memory_addr = opcode[2] << 8 | opcode[1];
+            state->h = state->memory[memory_addr+1];
+            state->l = state->memory[memory_addr];
+            state->pc += 2;
+            break;
+        }
+        //SHLD finished
+        //STC started
+        case 0x37:{
+            state->cc.cy = 1;
+            break;
+        }
+        //STC finished
+        //CMC started
+        case 0x3F:{
+            state->cc.cy = ~state->cc.cy; break;
+        }
+        case 0x2f: { // CMA
+            state->a = ~state->a; 
+            break;
+}
+        //CMC finished
         case 0x80: // ADD B (Add register B to A)
         {
             uint16_t res = (uint16_t)state->a + (uint16_t)state->b;
