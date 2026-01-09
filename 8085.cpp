@@ -1,17 +1,28 @@
 #include"8085.hpp"
 
+int CheckParity(uint8_t result)
+{
+    int one_count = 0;
+    int last_bit;
+    while(result != 0){
+        last_bit = result & 0x01;
+        one_count += last_bit;
+        result = result >> 1;
+    }
+    return (~(one_count % 2));  // return 1 if even parity else 0;
+}
+
 void updateFlagsDCR(State8085* state, uint8_t result) {
     state->cc.z = (result == 0);          // Is the result zero?
     state->cc.s = (result & 0x80) != 0;   // Is bit 7 set (negative)?
-    //state->cc.p = CheckParity(result);    // Is the parity even? yet to be done!!
-    // Note: DCR does NOT affect the Carry (CY) flag.
+    state->cc.p = CheckParity(result);    // Is the parity even? yet to be done!!
+    //Note: DCR and INR does NOT affect the Carry (CY) flag.
 }
 
 void updateFlagsINR(State8085* state, uint8_t result) {
     state->cc.z = (result == 0);          // Is the result zero?
     state->cc.s = (result & 0x80) != 0;   // Is bit 7 set (negative)?
-    //state->cc.p = CheckParity(result);    // Is the parity even? yet to be done!!
-    // Note: DCR does NOT affect the Carry (CY) flag.
+    state->cc.p = CheckParity(result);    // Is the parity even? yet to be done!!
 }
 void Emulate8085(State8085* state) {
     // 1. Fetch: Get the opcode at the current Program Counter
@@ -86,7 +97,9 @@ void Emulate8085(State8085* state) {
         //INR started  (flag check is yet to be done)
         case 0x04: { // INR b
             state->b++;
+            std::cout << "parity prev is  " << (int)state->cc.p << std::endl;
             updateFlagsINR(state, state->b);
+            std::cout << "parity is  " << (int)state->cc.p << std::endl;
             break;
         }
         case 0x0C: { // INR c
@@ -238,18 +251,6 @@ void Emulate8085(State8085* state) {
             break;
         }
         //Rotate finished
-        //DAD started
-        // case 0x09:{
-        //     uint8_t higher_nibble = state->h + state->b;
-        //     uint8_t lower_nibble = state->l + state->c;
-        //     if (lower_nibble < state->l || lower_nibble < state->c){
-        //         ++higher_nibble;
-        //         if (lower_nibble < state->h || lower_nibble < state->b){
-        //             state->cc.cy = 1;
-        //         }
-        //     }
-
-        // }
         case 0x09: { // DAD B (HL = HL + BC)
             // 1. Combine pairs into 16-bit values
             uint32_t hl = (state->h << 8) | state->l;
@@ -422,12 +423,12 @@ int main() {
     state.memory = new uint8_t[0x10000]; // 64KB RAM
     state.pc = 0; // Standard start point
     state.sp = 0xFFFF;
-    state.memory[0] = 0x0f;
-    state.a = 0b10100011;
+    state.memory[0] = 0x04;
+    state.b = 0b10100010;
 
     while (true) {
         Emulate8085(&state);
-     }
+    }
 
     return 0;
 }
