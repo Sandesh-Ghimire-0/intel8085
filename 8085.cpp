@@ -385,15 +385,272 @@ void Emulate8085(State8085* state) {
             break;
         }
         //STC finished
-        //CMC started
-        case 0x3F:{
+        
+        case 0x3F:{ // CMC
             state->cc.cy = ~state->cc.cy; break;
         }
         case 0x2f: { // CMA
             state->a = ~state->a; 
             break;
-}
-        //CMC finished
+        }
+        case 0x40:{ // MOV B, B
+            // do nothing since it is just moving B to B
+            break;
+        }
+
+        case 0x41:{ 
+            state->b = state->c;
+            break;
+        }
+        case 0x42:{  
+            state->b = state->d;
+            break;
+        }
+        case 0x43:{  
+            state->b = state->e;
+            break;
+        }
+        case 0x44:{
+            state->b = state->h;
+            break;
+        }
+        case 0x45:{
+            state->b = state->l;
+            break;
+        }
+        case 0x46:{
+            state->b = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x47:{
+            state->b = state->a;
+            break;
+        }
+        case 0x48:{  // mov c
+            state->c = state->b;
+            break;
+        }
+        case 0x49:{
+            // do nothing since mov c to c
+            break;
+        }
+        case 0x4A:{
+            state->c = state->d;
+            break;
+        }
+        case 0x4B:{
+            state->c = state->e;
+            break;
+        }
+        case 0x4C:{
+            state->c = state->h;
+            break;
+        }
+        case 0x4D:{
+            state->c = state->l;
+            break;
+        }
+        case 0x4E:{
+            state->c = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x4F:{  
+            state->c = state->a;
+            break;
+        }
+        case 0x50:{ // mov d
+            state->d = state->b;
+            break;
+        }
+        case 0x51:{
+            state->d = state->c;
+            break;
+        }
+        case 0x52:{
+
+            break;
+        }
+        case 0x53:{
+            state->d = state->e;
+            break;
+        }
+        case 0x54:{
+            state->d = state->h;
+            break;
+        }
+        case 0x55:{
+            state->d = state->l;
+            break;
+        }
+        case 0x56:{
+            state->d = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x57:{
+            state->d = state->a;
+            break;
+        }
+        case 0x58:{  // mov e
+            state->e = state->b;
+            break;
+        }
+        case 0x59:{
+            state->e = state->c;
+            break;
+        }
+        case 0x5A:{
+            state->e = state->d;
+            break;
+        }
+        case 0x5B:{
+
+            break;
+        }
+        case 0x5C:{
+            state->e = state->h;
+            break;
+        }
+        case 0x5D:{
+            state->e = state->l;
+            break;
+        }
+        case 0x5E:{
+            state->e = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x5F:{
+            state->e = state->a;
+            break;
+        }
+        case 0x60:{
+            state->h = state->b;
+            break;
+        }
+        case 0x61:{
+            state->h = state->c;
+            break;
+        }
+        case 0x62:{
+            state->h = state->d;
+            break;
+        }
+        case 0x63:{
+            state->h = state->e;
+            break;
+        }
+        case 0x64:{
+
+            break;
+        }
+        case 0x65:{
+            state->h = state->l;
+            break;
+        }
+        case 0x66:{
+            state->h = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x67:{
+            state->h = state->a;
+            break;
+        }
+        case 0x68:{
+            state->l = state->b;
+            break;
+        }
+        case 0x69:{
+            state->l = state->c;
+            break;
+        }
+        case 0x6A:{
+            state->l = state->d;
+            break;
+        }
+        case 0x6B:{
+            state->l = state->e;
+            break;
+        }
+        case 0x6C:{
+            state->l = state->h;
+            break;
+        }
+        case 0x6D:{
+            
+            break;
+        }
+        case 0x6E:{
+            state->l = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+        case 0x6F:{
+            state->l = state->a;
+            break;
+        }
+        case 0x70:{
+            state->memory[state->h << 8 | state->l] = state->b;
+            break;
+        }
+        case 0x71:{
+            state->memory[state->h << 8 | state->l] = state->c;
+            break;
+        }
+        case 0x72:{
+            state->memory[state->h << 8 | state->l] = state->d;
+            break;
+        }
+        case 0x73:{
+            state->memory[state->h << 8 | state->l] = state->e;
+            break;
+        }
+        case 0x74:{
+            state->memory[state->h << 8 | state->l] = state->h;
+            break;
+        }
+        case 0x75:{
+            state->memory[state->h << 8 | state->l] = state->l;
+            break;
+        }
+        case 0x76:{  // This is supposed to be a halt operation.
+            
+            break;
+        }
+        case 0x77:{
+            state->memory[state->h << 8 | state->l] = state->a;
+            break;
+        }
+        case 0x78:{
+            state->a = state->b;
+            break;
+        }
+        case 0x79:{
+            state->a = state->c;
+            break;
+        }
+        case 0x7A:{  
+            state->a = state->d;
+            break;
+        }
+        case 0x7B:{
+            state->a = state->e;
+            break;
+        }
+        case 0x7C:{
+            state->a = state->h;
+            break;
+        }
+        case 0x7D:{  
+            state->a = state->l;
+            break;
+        }
+        case 0x7E:{
+            state->a = state->memory[state->h << 8 | state-> l];
+            break;
+        }
+         case 0x7F:{
+
+            break;
+        }
+        // 01 or MOV family done;
         case 0x80: // ADD B (Add register B to A)
         {
             uint16_t res = (uint16_t)state->a + (uint16_t)state->b;
